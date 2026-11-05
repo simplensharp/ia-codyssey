@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>영화 티어리스트</title>
+<style>
+  :root {
+    --bg: #0e0d0c;
+    --panel: #181614;
+    --line: #2a2724;
+    --text: #ece6dc;
+    --muted: #8a837a;
+    --card: #23201d;
+    --card-hover: #2d2925;
+    --accent: #e8c26a;
+    --S: #e8c26a;
+    --A: #d98a5f;
+    --B: #b8735f;
+    --C: #6f8a8c;
+    --D: #5a5f6e;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", system-ui, sans-serif;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 40px 32px 56px; }
+
+  header {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    border-bottom: 1px solid var(--line); padding-bottom: 18px; margin-bottom: 24px;
+  }
+  .eyebrow { font-size: 11px; letter-spacing: .32em; color: var(--accent); margin: 0 0 8px; }
+  h1 { font-size: 30px; font-weight: 800; letter-spacing: -.02em; margin: 0; }
+  .btn-reset {
+    background: transparent; color: var(--muted); border: 1px solid var(--line);
+    padding: 9px 16px; border-radius: 6px; font: inherit; font-size: 13px; cursor: pointer;
+  }
+  .btn-reset:hover { color: var(--text); border-color: var(--muted); }
+
+  .tiers { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  .tier { display: flex; min-height: 76px; border-top: 1px solid var(--line); }
+  .tier:first-child { border-top: none; }
+  .tier-label {
+    flex: 0 0 76px; display: flex; align-items: center; justify-content: center;
+    font-size: 28px; font-weight: 900; color: #141210;
+  }
+  .tier[data-tier="S"] .tier-label { background: var(--S); }
+  .tier[data-tier="A"] .tier-label { background: var(--A); }
+  .tier[data-tier="B"] .tier-label { background: var(--B); }
+  .tier[data-tier="C"] .tier-label { background: var(--C); color: var(--text); }
+  .tier[data-tier="D"] .tier-label { background: var(--D); color: var(--text); }
+
+  .zone {
+    flex: 1; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 8px;
+    padding: 12px; background: var(--panel); transition: background .15s;
+  }
+  .zone.over { background: #24201a; box-shadow: inset 0 0 0 2px var(--accent); }
+
+  .pool-title {
+    margin: 32px 0 10px; font-size: 13px; letter-spacing: .12em; color: var(--muted);
+    display: flex; justify-content: space-between;
+  }
+  .pool { border: 1px dashed var(--line); border-radius: 10px; min-height: 96px; }
+
+  .card {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--card); border: 1px solid var(--line); border-radius: 6px;
+    padding: 9px 8px 9px 14px; font-size: 14px; font-weight: 600;
+    cursor: grab; user-select: none;
+  }
+  .card:hover { background: var(--card-hover); }
+  .card.dragging { opacity: .35; }
+  .card .del {
+    width: 22px; height: 22px; border: none; border-radius: 4px; background: transparent;
+    color: var(--muted); font-size: 15px; line-height: 1; cursor: pointer;
+  }
+  .card .del:hover { background: #3a2a26; color: #f0a08a; }
+
+  .add {
+    margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--line);
+  }
+  .add form { display: flex; gap: 10px; }
+  .add input {
+    flex: 1; background: var(--panel); color: var(--text); border: 1px solid var(--line);
+    border-radius: 6px; padding: 12px 14px; font: inherit; font-size: 15px; outline: none;
+  }
+  .add input:focus { border-color: var(--accent); }
+  .add input.invalid { border-color: #d9735f; }
+  .add button {
+    background: var(--accent); color: #141210; border: none; border-radius: 6px;
+    padding: 0 24px; font: inherit; font-size: 15px; font-weight: 800; cursor: pointer;
+  }
+  .add button:hover { filter: brightness(1.08); }
+  .notice { min-height: 20px; margin: 8px 2px 0; font-size: 13px; color: #e59a83; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <p class="eyebrow">MY MOVIE TIER</p>
+      <h1>영화 티어리스트</h1>
+    </div>
+    <button class="btn-reset" id="reset" type="button">전부 초기화</button>
+  </header>
+
+  <section class="tiers" id="tiers"></section>
+
+  <div class="pool-title"><span>미분류</span><span id="count"></span></div>
+  <section class="zone pool" id="pool" data-zone="미분류"></section>
+
+  <section class="add">
+    <form id="addForm" autocomplete="off">
+      <input id="title" type="text" placeholder="영화 제목을 입력하세요" aria-label="영화 제목">
+      <button type="submit">추가</button>
+    </form>
+    <p class="notice" id="notice" role="status"></p>
+  </section>
+</div>
+
+<script>
+(() => {
+  const TIERS = ["S", "A", "B", "C", "D"];
+  const POOL = "미분류";
+  const DEFAULTS = ["기생충", "인터스텔라", "라라랜드", "센과 치히로의 행방불명",
+                    "어벤져스: 엔드게임", "범죄도시", "타이타닉", "토이 스토리"];
+  const KEY = "movie-tier-list-v1";
+
+  // 상태: 칸 이름 → 제목 배열(들어온 순서)
+  let state = load() || initial();
+
+  function initial() {
+    const s = {};
+    TIERS.forEach(t => s[t] = []);
+    s[POOL] = DEFAULTS.slice();
+    return s;
+  }
+  function load() {
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (!raw) return null;
+      const s = JSON.parse(raw);
+      const zones = [...TIERS, POOL];
+      if (!zones.every(z => Array.isArray(s[z]))) return null;
+      return s;
+    } catch (e) { return null; }
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  const norm = t => t.replace(/\s+/g, " ").trim().toLowerCase();
+  const allTitles = () => [...TIERS, POOL].flatMap(z => state[z]);
+  const zoneOf = title => [...TIERS, POOL].find(z => state[z].includes(title));
+
+  // 화면 만들기
+  const tiersEl = document.getElementById("tiers");
+  TIERS.forEach(t => {
+    const row = document.createElement("div");
+    row.className = "tier";
+    row.dataset.tier = t;
+    row.innerHTML = `<div class="tier-label">${t}</div><div class="zone" data-zone="${t}"></div>`;
+    tiersEl.appendChild(row);
+  });
+  const zoneEls = {};
+  document.querySelectorAll(".zone").forEach(el => zoneEls[el.dataset.zone] = el);
+
+  function makeCard(title) {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.draggable = true;
+    card.dataset.title = title;
+
+    const label = document.createElement("span");
+    label.textContent = title;
+
+    const del = document.createElement("button");
+    del.className = "del";
+    del.type = "button";
+    del.title = "지우기";
+    del.setAttribute("aria-label", `${title} 지우기`);
+    del.textContent = "×";
+    del.addEventListener("click", () => removeMovie(title));
+    del.addEventListener("mousedown", e => e.stopPropagation());
+
+    card.append(label, del);
+    card.addEventListener("dragstart", e => {
+      e.dataTransfer.setData("text/plain", title);
+      e.dataTransfer.effectAllowed = "move";
+      card.classList.add("dragging");
+    });
+    card.addEventListener("dragend", () => card.classList.remove("dragging"));
+    return card;
+  }
+
+  function render() {
+    Object.entries(zoneEls).forEach(([z, el]) => {
+      el.replaceChildren(...state[z].map(makeCard));
+    });
+    document.getElementById("count").textContent = `${state[POOL].length}편`;
+  }
+
+  // 끌어다 놓기
+  Object.entries(zoneEls).forEach(([z, el]) => {
+    el.addEventListener("dragover", e => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; el.classList.add("over"); });
+    el.addEventListener("dragleave", e => { if (!el.contains(e.relatedTarget)) el.classList.remove("over"); });
+    el.addEventListener("drop", e => {
+      e.preventDefault();
+      el.classList.remove("over");
+      const title = e.dataTransfer.getData("text/plain");
+      const from = zoneOf(title);
+      if (!from || from === z) return; // 같은 칸이면 순서 그대로
+      state[from] = state[from].filter(t => t !== title);
+      state[z].push(title);             // 들어온 순서대로 뒤에 붙임
+      save(); render();
+    });
+  });
+
+  // 지우기
+  function removeMovie(title) {
+    const z = zoneOf(title);
+    if (!z) return;
+    state[z] = state[z].filter(t => t !== title);
+    save(); render();
+  }
+
+  // 추가
+  const input = document.getElementById("title");
+  const notice = document.getElementById("notice");
+  function warn(msg) {
+    notice.textContent = msg;
+    input.classList.add("invalid");
+    input.focus();
+  }
+  input.addEventListener("input", () => { notice.textContent = ""; input.classList.remove("invalid"); });
+
+  document.getElementById("addForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const title = input.value.replace(/\s+/g, " ").trim();
+    if (!title) { warn("영화 제목을 입력해 주세요."); return; }
+    if (allTitles().some(t => norm(t) === norm(title))) { warn("이미 있는 영화예요."); return; }
+    state[POOL].push(title);
+    save(); render();
+    input.value = "";
+    notice.textContent = "";
+    input.classList.remove("invalid");
+    input.focus();
+  });
+
+  // 전부 초기화 (바로 실행)
+  document.getElementById("reset").addEventListener("click", () => {
+    state = initial();
+    save(); render();
+    input.value = "";
+    notice.textContent = "";
+    input.classList.remove("invalid");
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
