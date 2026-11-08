@@ -1,6 +1,6 @@
 # ia-codyssey
 
-코디세이(Codyssey) 학습 및 과제 제출용 GitHub 저장소입니다.
+코디세이(Codyssey) 학습 및 과제 제출용 GitHub 저장소입니다
 
 ## 개요
 - **학습자:** simplensharp
