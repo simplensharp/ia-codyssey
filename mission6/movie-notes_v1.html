@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Movie Notes — 나의 영화 기록 노트</title>
+<meta name="description" content="연대별 노트 네 권에 적어 둔 영화 스무 편 — 나의 영화 기록 노트">
+<meta name="theme-color" content="#E7E2D9">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://raw.githubusercontent.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Cormorant+Garamond:ital,wght@1,500;1,600&family=Nanum+Pen+Script&display=swap">
+<style>
+/* ═══════════════ 기본 값 ═══════════════ */
+:root{
+  --bg:#E7E2D9;
+  --ink:#28324D;
+  --ink-2:rgba(40,50,77,.64);
+  --ink-3:rgba(40,50,77,.34);
+  --paper:#FBF8F0;
+  --postit:#F6E9AE;
+  --ribbon:#C8952C;
+  --f-title:'Cormorant Garamond','Times New Roman',serif;
+  --f-en:'Caveat','Segoe Print','Bradley Hand',cursive;
+  --f-ko:'Nanum Pen Script','Caveat',cursive;
+  --f-mono:ui-monospace,'SFMono-Regular',Menlo,Consolas,'Liberation Mono',monospace;
+  --ease:cubic-bezier(.2,.7,.2,1);
+  --vh:100vh;
+  /* 펼친 노트 크기 (컴퓨터) — 쪽 하나의 가로:세로 = 0.72 */
+  --board:15px; --board-t:12px; --board-b:17px; --edge:14px; --edge-b:6px;
+  --ph:max(320px, min(calc(var(--vh) - 244px), calc((100vw - 160px) / 1.44), 780px));
+  --pw:calc(var(--ph) * .72);
+}
+@supports (height:100dvh){ :root{ --vh:100dvh; } }
+@media (max-width:767.98px){
+  :root{
+    --board:9px; --board-t:8px; --board-b:11px; --edge:9px; --edge-b:4px;
+    --pw:max(220px, min(calc(100vw - 58px), calc((var(--vh) - 210px) * .72), 470px));
+    --ph:calc(var(--pw) / .72);
+  }
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-ko);overflow:hidden;
+  -webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+button{font:inherit;color:inherit}
+img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none}
+img.is-broken{visibility:hidden}
+.defs{position:absolute;width:0;height:0;overflow:hidden}
+.noscript{position:fixed;left:16px;bottom:16px;z-index:99;margin:0;font:16px/1.5 sans-serif;color:#28324D}
+:focus{outline:none}
+:focus-visible{outline:2px solid var(--ink);outline-offset:3px;border-radius:3px}
+
+/* ═══════════════ 화면 두 장 (책장 / 펼친 노트) ═══════════════ */
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;overflow-x:hidden;overflow-y:auto;
+  background:
+    radial-gradient(115% 85% at 4% 0%, rgba(251,249,245,.96) 0%, rgba(251,249,245,0) 56%),
+    linear-gradient(158deg,#ECE8E0 0%,#E7E2D9 46%,#DCD5C8 100%);
+  opacity:0;visibility:hidden;transition:opacity .45s ease,visibility 0s linear .45s}
+.screen.is-active{opacity:1;visibility:visible;transition:opacity .45s ease,visibility 0s}
+.screen::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.5;mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .42 0 0 0 0 .36 0 0 0 0 .28 0 0 0 .55 -.18'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23g)'/%3E%3C/svg%3E")}
+
+/* ═══════════════ 머리 ═══════════════ */
+.topbar{position:relative;z-index:3;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;
+  padding:clamp(18px,3.2vw,42px) clamp(18px,4vw,56px) 0}
+.brand{min-width:0}
+.caption{margin:0 0 8px 2px;font-family:var(--f-mono);font-size:11px;letter-spacing:.24em;color:var(--ink-2);white-space:nowrap}
+.title{margin:0;font-family:var(--f-title);font-style:italic;font-weight:500;font-size:clamp(42px,4.6vw,66px);
+  line-height:.92;letter-spacing:-.012em;color:var(--ink)}
+.subtitle{margin:10px 0 0 3px;font-family:var(--f-ko);font-size:clamp(21px,1.9vw,27px);line-height:1.1;color:rgba(40,50,77,.84)}
+.topbar-note{align-items:center;padding-top:clamp(14px,2.2vw,26px)}
+.topbar-note .title{font-size:clamp(26px,2.4vw,34px)}
+.menu{display:flex;gap:18px;padding-top:2px}
+.menu-link{position:relative;background:none;border:0;padding:4px 3px 7px;font-family:var(--f-ko);font-size:26px;line-height:1;
+  color:var(--ink);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.menu-link::after{content:"";position:absolute;left:-3px;right:-4px;bottom:0;height:8px;opacity:0;transform:scaleX(.5);transform-origin:left;
+  transition:opacity .25s,transform .4s var(--ease);
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 8' preserveAspectRatio='none'%3E%3Cpath d='M2 5.4C14 3.2 29 6.8 43 4.6S55 4.2 58 5' fill='none' stroke='%2328324D' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat center/100% 100%}
+.menu-link[aria-current="page"]::after{opacity:1;transform:none}
+@media (hover:hover){ .menu-link:hover::after{opacity:1;transform:none} }
+
+/* ═══════════════ 화면 1 · 책장 ═══════════════ */
+.shelf-main{position:relative;z-index:2;flex:1 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:min(9vh,90px) 0 clamp(26px,5vh,64px)}  /* 가운데보다 조금 아래 */
+.shelf-stage{
+  --S:max(300px, min(1160px, 90vw, calc((var(--vh) - 300px) * 2.6)));
+  --u:calc(var(--S) / 980);  /* 선반 그림 1px = --u */
+  position:relative;width:var(--S);height:calc(var(--u) * 284);margin-top:calc(var(--u) * 128 + 24px)}
+html.js:not(.is-ready) .shelf-stage, html.js:not(.is-ready) .screen-shelf .topbar{opacity:0}
+.shelf-stage,.screen-shelf .topbar{transition:opacity .7s ease}
+.shelf-img{position:absolute;left:0;top:0;width:100%;height:100%;mix-blend-mode:multiply;pointer-events:none}
+
+/* 안내 손글씨 */
+.guide{position:absolute;left:0;top:0;width:0;height:0;pointer-events:none;z-index:3}
+.guide-text{position:absolute;left:calc(var(--u) * -42);top:calc(var(--u) * -124);margin:0;white-space:nowrap;
+  font-family:var(--f-ko);font-size:max(21px, calc(var(--u) * 31));line-height:1;color:var(--ink);transform:rotate(-5deg);transform-origin:left bottom}
+.guide-arrow{position:absolute;overflow:visible}
+.guide-arrow path{fill:none;stroke:var(--ink);stroke-width:1.7px;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.guide-arrow.for-desk{left:calc(var(--u) * -40);top:calc(var(--u) * -130);width:calc(var(--u) * 280);height:calc(var(--u) * 190)}
+.guide-arrow.for-mobile{display:none}
+
+/* 노트 한 권 */
+.book-slot{position:absolute;left:calc(var(--u) * var(--x));top:calc(var(--u) * var(--top));
+  width:calc(var(--u) * var(--bw));height:calc(var(--u) * var(--bh));z-index:2}
+.book-slot:hover,.book-slot:focus-within{z-index:6}
+.book-floor{position:absolute;left:2%;right:0;top:85.2%;height:8.6%;border-radius:50%;pointer-events:none;mix-blend-mode:multiply;
+  background:radial-gradient(closest-side,rgba(48,34,18,.55),rgba(48,34,18,0));transition:opacity .45s var(--ease),transform .45s var(--ease)}
+.book{position:absolute;inset:0;transform-origin:97% 89.5%;transform:translateY(0) rotate(var(--lean,0deg));transition:transform .45s var(--ease)}
+.book-wall{position:absolute;left:5%;right:3%;top:3%;height:84%;border-radius:5%/3.5%;background:rgba(58,44,28,.30);pointer-events:none;
+  filter:blur(calc(var(--u) * 6));transform:translate(calc(var(--u) * 7),calc(var(--u) * 4));transition:transform .45s var(--ease),opacity .45s}
+.book-btn{position:absolute;inset:0;z-index:1;display:block;width:100%;height:100%;margin:0;padding:0;border:0;background:none;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;border-radius:4px}
+.book-btn:focus-visible{outline-offset:5px}
+.book-backing{position:absolute;left:1%;right:1.3%;top:1%;bottom:10.9%;border-radius:3.2%/2.1%;background:#ECE7DE}
+.book-cover{position:absolute;left:0;top:0;width:100%;height:100%;mix-blend-mode:multiply;pointer-events:none}
+.cover-label{position:absolute;left:27.9%;top:18.5%;width:43.6%;height:14.5%;display:flex;align-items:center;justify-content:center;
+  font-family:var(--f-en);font-weight:700;font-size:calc(var(--u) * 24);line-height:1;color:var(--ink);white-space:nowrap;
+  transform:rotate(-2.5deg);pointer-events:none}
+.pivot{position:absolute;left:97%;top:89.5%;width:0;height:0}
+.book-slot.is-out .book,.book-slot.is-out .book-floor{visibility:hidden}
+@media (hover:hover) and (pointer:fine){
+  .book-slot:hover .book{transform:translateY(calc(var(--u) * -9)) rotate(var(--lean,0deg))}
+  .book-slot:hover .book-wall{transform:translate(calc(var(--u) * 10),calc(var(--u) * 13));opacity:.72}
+  .book-slot:hover .book-floor{opacity:.5;transform:scaleX(.92)}
+}
+.book-slot:has(.book-btn:focus-visible) .book{transform:translateY(calc(var(--u) * -9)) rotate(var(--lean,0deg))}
+
+/* 색 탭 + 쪽지 */
+.tabs{position:absolute;left:0;top:0;width:100%;height:0;z-index:0}
+.tab{position:absolute;left:calc(var(--tx) * 100%);bottom:calc(var(--u) * -8);width:calc(var(--u) * 17);height:calc(var(--u) * (var(--th) + 8));
+  margin:0 0 0 calc(var(--u) * -8.5);padding:0;border:0;border-radius:calc(var(--u) * 2.2) calc(var(--u) * 2.2) 1px 1px;cursor:pointer;
+  background-color:var(--tc);background-image:linear-gradient(90deg,rgba(255,255,255,.3),rgba(255,255,255,0) 46%,rgba(0,0,0,.12));
+  box-shadow:inset 0 0 0 .5px rgba(0,0,0,.2);transform:rotate(var(--tr));transform-origin:50% 100%;
+  transition:transform .3s var(--ease);-webkit-tap-highlight-color:transparent}
+.tab::before{content:"";position:absolute;left:-5px;right:-5px;top:-6px;bottom:0}
+.tab:focus-visible{outline-offset:2px}
+.tab-note{position:absolute;left:50%;bottom:calc(100% + 13px);z-index:2;display:flex;align-items:baseline;gap:7px;white-space:nowrap;
+  padding:6px 11px 5px 10px;border-radius:2px;background:#FFFCF4;color:var(--ink);pointer-events:none;
+  box-shadow:0 8px 16px -8px rgba(40,30,20,.45),0 1px 2px rgba(40,30,20,.16);
+  opacity:0;transform:translate(-50%,6px) rotate(calc(var(--tr) * -1 - 2deg));transition:opacity .2s ease,transform .25s var(--ease)}
+.tab-note::after{content:"";position:absolute;left:50%;top:100%;width:9px;height:9px;background:#FFFCF4;transform:translate(-50%,-5px) rotate(45deg);
+  box-shadow:3px 3px 4px -2px rgba(40,30,20,.18)}
+.tn-no{font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;color:var(--ink-2)}
+.tn-title{font-family:var(--f-en);font-weight:700;font-size:21px;line-height:1}
+.tn-title[lang="ko"]{font-family:var(--f-ko);font-weight:400;font-size:23px}
+.tab:hover .tab-note,.tab:focus-visible .tab-note{opacity:1;transform:translate(-50%,0) rotate(calc(var(--tr) * -1 - 2deg))}
+@media (hover:hover) and (pointer:fine){
+  .tab:hover{transform:translateY(calc(var(--u) * -3)) rotate(var(--tr))}
+}
+
+/* 폰: 책 아래 큰 연도 */
+.year-btn{display:none;position:absolute;top:calc(var(--u) * 226);left:calc(var(--u) * var(--cx));transform:translateX(-50%);z-index:3;
+  margin:0;padding:3px 4px;border:0;background:none;cursor:pointer;font-family:var(--f-en);font-weight:700;line-height:1;color:var(--ink);
+  font-size:min(30px, calc(var(--u) * 53));  /* 글자 폭 2.15em → 책 간격(159)의 72%까지만 */
+  white-space:nowrap;
+  -webkit-tap-highlight-color:transparent}
+.year-btn span{display:inline-block;transform:rotate(-3deg)}
+
+/* ═══════════════ 화면 2 · 펼친 노트 ═══════════════ */
+.note-main{position:relative;z-index:2;flex:1 0 auto;display:flex;align-items:center;justify-content:center;padding:14px 0 6px}
+.notebook{position:relative;flex:none;outline:none;
+  width:calc(2 * var(--pw) + 2 * (var(--board) + var(--edge)));
+  height:calc(var(--ph) + var(--board-t) + var(--board-b) + var(--edge-b))}
+.notebook.is-concealed{opacity:0}
+.notebook.is-half{clip-path:inset(-60px -80px -120px 50%)}
+.notebook.is-half .nb-ribbon,.notebook.is-concealed .nb-ribbon{opacity:0;transition:none}
+.nb-board{position:absolute;inset:0;border-radius:12px;background-color:var(--cover,#24324A);
+  background-image:
+    repeating-linear-gradient(45deg,rgba(255,255,255,.035) 0 1px,rgba(255,255,255,0) 1px 3px),
+    repeating-linear-gradient(-45deg,rgba(0,0,0,.05) 0 1px,rgba(0,0,0,0) 1px 3px),
+    radial-gradient(120% 90% at 10% 0%,rgba(255,255,255,.10),rgba(255,255,255,0) 60%);
+  box-shadow:0 30px 50px -26px rgba(45,32,18,.6),0 12px 20px -12px rgba(45,32,18,.4),inset 0 0 0 1px rgba(255,255,255,.07),inset 0 -2px 0 rgba(0,0,0,.2)}
+.nb-board::after{content:"";position:absolute;top:0;bottom:0;left:50%;width:22px;transform:translateX(-50%);
+  background:linear-gradient(90deg,rgba(0,0,0,0),rgba(0,0,0,.28) 50%,rgba(0,0,0,0))}
+.nb-pages{position:absolute;left:calc(var(--board) + var(--edge));top:var(--board-t);width:calc(2 * var(--pw));height:var(--ph)}
+.nb-block{position:absolute;top:0;width:var(--pw);height:var(--ph);background:var(--paper)}
+/* 종이 두께: 한 장씩 겹친 가장자리 13겹 */
+.nb-block-l{left:0;border-radius:2px 0 0 2px;
+  box-shadow:-1px 0.42px 0 #DED6C5,-2px 0.84px 0 #F9F5EB,-3px 1.26px 0 #DED6C5,-4px 1.68px 0 #F9F5EB,-5px 2.10px 0 #DED6C5,-6px 2.52px 0 #F9F5EB,
+    -7px 2.94px 0 #DED6C5,-8px 3.36px 0 #F9F5EB,-9px 3.78px 0 #DED6C5,-10px 4.20px 0 #F9F5EB,-11px 4.62px 0 #DED6C5,-12px 5.04px 0 #F9F5EB,
+    -13px 5.46px 0 #C8BCA5,-11px 7px 10px rgba(40,28,14,.26)}
+.nb-block-r{left:var(--pw);border-radius:0 2px 2px 0;
+  box-shadow:1px 0.42px 0 #DED6C5,2px 0.84px 0 #F9F5EB,3px 1.26px 0 #DED6C5,4px 1.68px 0 #F9F5EB,5px 2.10px 0 #DED6C5,6px 2.52px 0 #F9F5EB,
+    7px 2.94px 0 #DED6C5,8px 3.36px 0 #F9F5EB,9px 3.78px 0 #DED6C5,10px 4.20px 0 #F9F5EB,11px 4.62px 0 #DED6C5,12px 5.04px 0 #F9F5EB,
+    13px 5.46px 0 #C8BCA5,11px 7px 10px rgba(40,28,14,.26)}
+.spread{position:absolute;inset:0;perspective:2600px;perspective-origin:50% 42%}
+.pslot{position:absolute;top:0;width:var(--pw);height:var(--ph)}
+.pslot-l{left:0}
+.pslot-r{left:var(--pw)}
+.nb-ribbon{position:absolute;left:50%;top:calc(var(--board-t) + var(--ph) - 10px);width:24px;height:96px;margin-left:-11px;z-index:6;pointer-events:none;
+  overflow:visible;filter:drop-shadow(1px 2px 1.4px rgba(40,28,12,.32));transition:opacity .5s ease}
+
+/* 쪽 공통 */
+.page{position:absolute;left:0;top:0;width:var(--pw);height:var(--ph);overflow:hidden;container-type:inline-size;
+  background-color:var(--paper);color:var(--ink)}
+.page.is-dotted{background-image:radial-gradient(circle,rgba(40,50,77,.24) .65px,rgba(40,50,77,0) 1.25px);
+  background-size:calc(var(--pw) * .046) calc(var(--pw) * .046);background-position:calc(var(--pw) * .023) calc(var(--pw) * .023)}
+.page.is-inside{background-color:#F7F2E6}
+.page::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:4}
+.page.side-r::after{background:linear-gradient(90deg,rgba(74,58,36,.22) 0,rgba(74,58,36,.08) 3.2%,rgba(74,58,36,0) 10%),
+  linear-gradient(90deg,rgba(255,255,255,0) 70%,rgba(255,255,255,.16) 100%)}
+.page.side-l::after{background:linear-gradient(270deg,rgba(74,58,36,.22) 0,rgba(74,58,36,.08) 3.2%,rgba(74,58,36,0) 10%),
+  linear-gradient(270deg,rgba(255,255,255,0) 70%,rgba(255,255,255,.16) 100%)}
+.pg{position:absolute;inset:0;display:flex;flex-direction:column;padding:8.6cqw 9cqw 11.6cqw 11.6cqw}
+.side-l .pg{padding:8.6cqw 11.6cqw 11.6cqw 9cqw}
+.folio{position:absolute;bottom:4.8cqw;font-family:var(--f-mono);font-size:3.1cqw;letter-spacing:.08em;color:var(--ink-2)}
+.side-r .folio{right:7.4cqw}
+.side-l .folio{left:7.4cqw}
+
+/* 영화 한 쪽 */
+.mv-head{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:2.8cqw;row-gap:.6cqw}
+.mv-title{position:relative;margin:0;font-family:var(--f-en);font-weight:700;font-size:9.8cqw;line-height:1.02;letter-spacing:-.004em}
+.mv-title[lang="ko"]{font-family:var(--f-ko);font-weight:400;font-size:11cqw;line-height:.98}
+.mv-title.is-long{font-size:8.6cqw}
+.mv-title.is-xlong{font-size:7.8cqw}
+.mv-title-text{position:relative;z-index:1}
+.uline{position:absolute;left:-1.5%;width:103%;bottom:-2.1cqw;height:3cqw;overflow:visible}
+.uline path{fill:none;stroke:var(--acc,var(--ink));stroke-linecap:round;vector-effect:non-scaling-stroke}
+.uline .u1{stroke-width:2.4px;opacity:.9}
+.uline .u2{stroke-width:1.3px;opacity:.55}
+.mv-year{font-family:var(--f-en);font-weight:500;font-size:6.2cqw;line-height:1;color:var(--ink-2)}
+.mv-sketch{flex:1 1 auto;min-height:0;max-height:58cqw;margin:5.6cqw 0 0;display:flex;align-items:flex-end;justify-content:center}
+.mv-sketch img{display:block;max-width:72cqw;max-height:100%;width:auto;height:auto;mix-blend-mode:multiply}
+.mv-note{display:flex;align-items:flex-end;justify-content:flex-end;gap:1.2cqw;margin-top:.4cqw;min-height:11cqw}
+.side-l .mv-note{flex-direction:row-reverse}
+.mv-arrow{flex:none;width:14.5cqw;height:9cqw;margin-bottom:2.3cqw;overflow:visible}
+.side-l .mv-arrow{transform:scaleX(-1)}
+.mv-arrow path{fill:none;stroke:var(--ink);stroke-width:1.6px;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.mv-label{margin:0;padding-bottom:.4cqw;font-family:var(--f-ko);font-size:8.4cqw;line-height:1;white-space:nowrap;transform:rotate(-2.5deg);transform-origin:left bottom}
+.side-l .mv-label{transform:rotate(-1.5deg);transform-origin:right bottom}
+.mv-label[lang="en"]{font-family:var(--f-en);font-weight:700;font-size:7.6cqw}
+
+/* 포스트잇 */
+.postit{position:relative;align-self:center;flex:none;width:80cqw;margin-top:2.6cqw;padding:4.2cqw 4.8cqw 4.4cqw;background:var(--postit);color:var(--ink);
+  transform:rotate(var(--tilt,-1.2deg));
+  box-shadow:0 2.4cqw 2.6cqw -2cqw rgba(84,62,8,.42),0 .3cqw .6cqw rgba(84,62,8,.12)}
+.postit::before{content:"";position:absolute;left:0;right:0;top:0;height:5.2cqw;background:linear-gradient(rgba(160,128,30,.12),rgba(160,128,30,0))}
+.postit::after{content:"";position:absolute;right:0;bottom:0;width:9cqw;height:5cqw;
+  background:linear-gradient(160deg,rgba(255,255,255,0) 40%,rgba(120,92,20,.10) 100%)}
+.pi-row{position:relative;display:flex;align-items:center;justify-content:space-between;gap:3cqw}
+.stars{display:flex;gap:.9cqw;flex:none}
+.star{position:relative;display:block;width:5.6cqw;height:5.6cqw}
+.star svg{position:absolute;left:0;top:0;width:5.6cqw;height:5.6cqw;overflow:visible}
+.star path{stroke:var(--ink);stroke-width:1.15px;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.star .s-empty path{fill:none;opacity:.5}
+.star .s-fill{position:absolute;left:0;top:0;height:100%;overflow:hidden}
+.star .s-fill path{fill:var(--ink)}
+.pi-date{font-family:var(--f-en);font-weight:700;font-size:6.3cqw;line-height:1;white-space:nowrap}
+/* 가장 긴 메모(10.9em)도 한 줄에 들어가는 크기. 넘치면 낱말 단위로 고르게 줄바꿈 */
+.pi-memo{position:relative;margin:2.7cqw 0 0;font-family:var(--f-ko);font-size:6.3cqw;line-height:1.16;word-break:keep-all;text-wrap:balance}
+.pi-memo + .pi-memo{margin-top:1cqw}
+
+/* 차례 (표지 안쪽) */
+.toc .pg{padding:10cqw 11.6cqw 9cqw 9.6cqw}
+.toc-plate{align-self:flex-start;margin:0;padding:3.4cqw 6cqw 3.6cqw;background:#FBF6E9;transform:rotate(-1.2deg);
+  box-shadow:inset 0 0 0 1px rgba(40,50,77,.34),inset 0 0 0 1.2cqw #FBF6E9,inset 0 0 0 calc(1.2cqw + 1px) rgba(40,50,77,.2),0 .4cqw 1cqw rgba(60,45,20,.08)}
+.toc-plate .d{font-family:var(--f-en);font-weight:700;font-size:12cqw;line-height:1}
+.toc-plate .v{font-family:var(--f-en);font-weight:500;font-size:8.2cqw;line-height:1;color:var(--ink-2)}
+.toc-cap{margin:10cqw 0 2.4cqw;font-family:var(--f-ko);font-size:8.2cqw;line-height:1}
+.toc-list{list-style:none;margin:0;padding:0}
+.toc-item{display:flex;align-items:baseline;gap:2.6cqw;width:100%;margin:0;padding:2.5cqw 1cqw 2.1cqw;border:0;border-bottom:1px dashed rgba(40,50,77,.2);
+  background:none;color:var(--ink);text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.toc-no{flex:none;width:3.6cqw;font-family:var(--f-mono);font-size:3.3cqw;color:var(--ink-2)}
+.toc-title{flex:0 1 auto;min-width:0;font-family:var(--f-en);font-weight:700;font-size:7.6cqw;line-height:1.02;
+  background:linear-gradient(transparent 58%,rgba(246,233,174,0) 58%);transition:background .25s}
+.toc-title[lang="ko"]{font-family:var(--f-ko);font-weight:400;font-size:8.6cqw}
+.toc-title.is-long{font-size:6.2cqw}
+.toc-title.is-xlong{font-size:5.9cqw}
+.toc-dots{flex:1 1 2cqw;min-width:2cqw;border-bottom:.5cqw dotted rgba(40,50,77,.34);transform:translateY(-1.1cqw)}
+.toc-year{flex:none;font-family:var(--f-en);font-weight:500;font-size:5.8cqw;line-height:1;color:var(--ink-2)}
+.toc-flag{flex:none;align-self:center;width:2.6cqw;height:4.8cqw;border-radius:.5cqw .5cqw 0 0;background:var(--tc);transform:rotate(5deg);
+  box-shadow:inset 0 0 0 .5px rgba(0,0,0,.18)}
+.toc-flag.is-empty{visibility:hidden}
+@media (hover:hover){ .toc-item:hover .toc-title{background:linear-gradient(transparent 58%,rgba(246,233,174,.95) 58%)} }
+.toc-legend{display:flex;align-items:center;gap:2.2cqw;margin:auto 0 0;font-family:var(--f-ko);font-size:6cqw;color:var(--ink-2)}
+.toc-legend .toc-flag{transform:none;--tc:var(--ink-3)}
+
+/* 아래 단추 줄 */
+.note-nav{position:relative;z-index:3;display:flex;justify-content:space-between;align-items:center;gap:12px;
+  padding:12px clamp(18px,4vw,56px) clamp(14px,2.6vh,28px)}
+.nav-btn{background:none;border:0;padding:6px 4px;font-family:var(--f-ko);font-size:26px;line-height:1;color:var(--ink);cursor:pointer;
+  white-space:nowrap;-webkit-tap-highlight-color:transparent;transition:opacity .2s}
+.nav-btn .ar{font-family:var(--f-en);font-weight:500;font-size:.95em}
+.nav-btn:disabled{opacity:.26;cursor:default}
+@media (hover:hover){ .nav-btn:not(:disabled):hover{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:5px} }
+.pager{display:flex;align-items:center;gap:clamp(12px,2vw,24px)}
+.pageno{min-width:7.5ch;text-align:center;font-family:var(--f-mono);font-size:13px;letter-spacing:.1em;color:var(--ink)}
+.pageno .ko{font-family:var(--f-ko);font-size:22px;letter-spacing:0}
+
+/* 넘기는 종이 (3D) */
+.leaf{position:absolute;left:var(--pw);top:0;width:var(--pw);height:var(--ph);transform-style:preserve-3d;pointer-events:none;z-index:5}
+.seg{position:absolute;left:0;top:0;width:calc(var(--pw) / var(--n));height:100%;transform-origin:0 50%;transform-style:preserve-3d}
+.seg .seg{left:100%}
+.face{position:absolute;inset:0;overflow:hidden;isolation:isolate;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.face-back{transform:rotateY(180deg)}
+.face > .page{left:auto;top:0}
+.shade{position:absolute;inset:0;z-index:5;background:#1F1A12;opacity:0;pointer-events:none}
+.shade-a{background:linear-gradient(90deg,#1F1A12,rgba(31,26,18,0))}
+.shade-b{background:linear-gradient(270deg,#1F1A12,rgba(31,26,18,0))}
+.fshadow{position:absolute;top:0;width:var(--pw);height:var(--ph);pointer-events:none;z-index:4;opacity:0}
+.fshadow-r{left:var(--pw);background:linear-gradient(90deg,rgba(30,22,10,.34),rgba(30,22,10,0) 70%)}
+.fshadow-l{left:0;background:linear-gradient(270deg,rgba(30,22,10,.30),rgba(30,22,10,0) 70%)}
+
+/* 책장에서 꺼내 펼치는 책 (3D) */
+.fly-layer{position:fixed;inset:0;z-index:60;pointer-events:none}
+.fly{position:absolute;transform-origin:0 0;perspective:2600px;perspective-origin:0 50%}
+.fly-shadow{position:absolute;left:4%;right:2%;top:3%;bottom:-1%;border-radius:4%;background:rgba(40,28,14,.42);filter:blur(14px);opacity:.35}
+.fly-cover{position:absolute;inset:0;transform-origin:0 50%;transform-style:preserve-3d}
+.fly-face{position:absolute;inset:0;overflow:hidden;isolation:isolate;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.fly-back{transform:rotateY(180deg)}
+.fly-back .notebook{position:absolute;left:0;top:0}
+.fly-backing{position:absolute;left:1%;right:1.3%;top:1%;bottom:.4%;border-radius:3.2%/2.3%;background:#ECE7DE}
+.fly-art{position:absolute;inset:0;background-repeat:no-repeat;background-size:100% calc(100% / .895);background-position:0 0;mix-blend-mode:multiply}
+.fly-label{position:absolute;left:27.9%;top:20.67%;width:43.6%;height:16.2%;display:flex;align-items:center;justify-content:center;
+  font-family:var(--f-en);font-weight:700;line-height:1;color:var(--ink);white-space:nowrap;transform:rotate(-2.5deg)}
+.fly-ribbon{position:absolute;left:10%;top:100%;width:4.4%;height:11.73%;overflow:hidden}
+.fly-ribbon > div{position:absolute;left:-227.3%;top:-852.4%;width:2272.7%;height:952.4%;background-size:100% 100%;mix-blend-mode:multiply}
+
+/* ═══════════════ 폰 (768px 미만) ═══════════════ */
+@media (max-width:767.98px){
+  .topbar{padding:16px 16px 0}
+  .caption{font-size:10px;letter-spacing:.2em;margin-bottom:6px}
+  .title{font-size:40px}
+  .subtitle{font-size:21px;margin-top:7px}
+  .menu-link{font-size:24px}
+  .topbar-note{padding-top:12px}
+  .topbar-note .title{font-size:27px}
+
+  .shelf-main{justify-content:center;padding-bottom:calc((100vw - 28px) / 980 * 110 + 34px)}
+  .shelf-stage{--S:calc(100vw - 28px);margin-top:calc(var(--u) * 300 + 40px)}
+  .tabs{display:none}
+  .year-btn{display:block}
+  .guide-text{left:calc(var(--u) * 30);top:calc(var(--u) * -262);font-size:22px;transform:rotate(-4deg)}
+  .guide-arrow.for-desk{display:none}
+  .guide-arrow.for-mobile{display:block;left:0;top:calc(var(--u) * -260);width:calc(var(--u) * 420);height:calc(var(--u) * 250)}
+
+  .note-main{padding:10px 0 4px}
+  .notebook{width:calc(var(--pw) + 2 * (var(--board) + var(--edge)))}
+  .nb-pages{width:var(--pw)}
+  .nb-block-l,.nb-block-r{left:0}
+  .nb-block-l{box-shadow:-1px .4px 0 #DED6C5,-2px .8px 0 #F9F5EB,-3px 1.2px 0 #DED6C5,-4px 1.6px 0 #F9F5EB,-5px 2px 0 #DED6C5,-6px 2.4px 0 #F9F5EB,
+    -7px 2.8px 0 #DED6C5,-8px 3.2px 0 #F9F5EB,-9px 3.6px 0 #C8BCA5,-7px 5px 8px rgba(40,28,14,.24)}
+  .nb-block-r{box-shadow:1px .4px 0 #DED6C5,2px .8px 0 #F9F5EB,3px 1.2px 0 #DED6C5,4px 1.6px 0 #F9F5EB,5px 2px 0 #DED6C5,6px 2.4px 0 #F9F5EB,
+    7px 2.8px 0 #DED6C5,8px 3.2px 0 #F9F5EB,9px 3.6px 0 #C8BCA5,7px 5px 8px rgba(40,28,14,.24)}
+  .nb-board{border-radius:9px}
+  .nb-board::after{display:none}
+  .nb-ribbon{height:60px;width:18px;margin-left:-8px}
+  .note-nav{padding:8px 12px max(12px, env(safe-area-inset-bottom))}
+  .nav-btn{font-size:23px;padding:8px 4px}
+  .pager{gap:10px}
+  .pageno{min-width:5.5ch;font-size:12px}
+}
+.mview{position:absolute;inset:0;overflow:hidden;touch-action:pan-y;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.mtrack{display:flex;width:100%;height:100%;transition:transform .42s cubic-bezier(.22,.8,.24,1);will-change:transform}
+.mtrack > .page{position:relative;flex:0 0 100%}
+
+@media (prefers-reduced-motion:reduce){
+  .screen,.screen.is-active{transition-duration:.01s}
+  .mtrack{transition-duration:.01s}
+  .book,.book-wall,.book-floor,.tab,.tab-note{transition:none}
+}
+</style>
+</head>
+<body>
+<svg class="defs" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="ribbonGrad" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0" stop-color="#A97A22"/><stop offset=".32" stop-color="#C8952C"/><stop offset=".68" stop-color="#D4A541"/><stop offset="1" stop-color="#AD7D24"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+<main id="app">
+<!-- 화면 1 · 책장 -->
+<section class="screen screen-shelf is-active" id="shelfScreen" aria-label="책장">
+  <header class="topbar">
+    <div class="brand">
+      <p class="caption">A MOVIE NOTEBOOK · 1990 — 2026</p>
+      <h1 class="title">Movie Notes</h1>
+      <p class="subtitle">나의 영화 기록 노트</p>
+    </div>
+    <nav class="menu" aria-label="책장 화면 메뉴">
+      <button type="button" class="menu-link" data-action="shelf" aria-current="page">책장</button>
+    </nav>
+  </header>
+  <div class="shelf-main">
+    <div class="shelf-stage" id="shelfStage">
+      <div class="guide" aria-hidden="true">
+        <p class="guide-text">한 권 골라 펼쳐 보기</p>
+        <svg class="guide-arrow for-desk" viewBox="-40 -130 280 190">
+          <path d="M134 -100C174 -98 197 -74 198 -40C199 -10 206 10 224 18"/>
+          <path d="M216 7.8 224 18 211 18.9"/>
+        </svg>
+        <svg class="guide-arrow for-mobile" viewBox="0 -260 420 250">
+          <path d="M226 -176C268 -160 292 -120 296 -62"/>
+          <path d="M282.5 -77.5 296.4 -60 307 -79.5"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 화면 2 · 펼친 노트 -->
+<section class="screen screen-note" id="noteScreen" aria-label="펼친 노트">
+  <header class="topbar topbar-note">
+    <p class="title">Movie Notes</p>
+    <nav class="menu" aria-label="노트 화면 메뉴">
+      <button type="button" class="menu-link" data-action="shelf">책장</button>
+    </nav>
+  </header>
+  <div class="note-main">
+    <section class="notebook" id="notebook" tabindex="-1" aria-label="노트">
+      <div class="nb-board"></div>
+      <div class="nb-pages" id="nbPages"></div>
+      <svg class="nb-ribbon" viewBox="0 0 24 96" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M6 0H18C18.6 26 17.4 58 20.6 90L15.3 82.4 9.8 94C8 60 6.4 28 6 0Z" fill="url(#ribbonGrad)"/>
+        <path d="M12 0C12.4 30 12.2 62 13.2 86" fill="none" stroke="rgba(255,240,200,.28)" stroke-width="1"/>
+      </svg>
+    </section>
+  </div>
+  <footer class="note-nav">
+    <button type="button" class="nav-btn nav-back" data-action="shelf"><span class="ar" aria-hidden="true">←</span> 책장으로</button>
+    <div class="pager">
+      <button type="button" class="nav-btn nav-prev" id="prevBtn"><span class="ar" aria-hidden="true">←</span> 이전</button>
+      <span class="pageno" id="pageNo" aria-live="polite">p. 1</span>
+      <button type="button" class="nav-btn nav-next" id="nextBtn">다음 <span class="ar" aria-hidden="true">→</span></button>
+    </div>
+  </footer>
+</section>
+</main>
+
+<div class="fly-layer" id="flyLayer" aria-hidden="true"></div>
+
+<noscript><p class="noscript">이 페이지는 JavaScript가 켜져 있어야 노트가 보여요.</p></noscript>
+
+<!-- 영화 목록: movies.csv 원본을 그대로 넣었다 (page 칸은 쓰지 않음, symbol 칸은 화면에 적지 않음) -->
+<script type="text/csv" id="movies-csv">
+no,decade,title_en,title_ko,year,symbol,sketch_file,page,watched,label,stars,memo_1,memo_2,tabbed,tab_color
+01,1990s,Jurassic Park,쥬라기 공원,1993,호박 속에 갇힌 모기,sketches/01_jurassic-park.webp,3,2018-04-14,모기 한 마리에서 시작,4.5,물컵 물결 하나로 심장이 쿵.,33년 지나도 공룡이 진짜 같음.,0,#E3A23A
+02,1990s,Forrest Gump,포레스트 검프,1994,초콜릿 상자,sketches/02_forrest-gump.webp,18,2019-07-06,뭐가 걸릴지 몰라,4,"인생은 초콜릿 상자, 대사 하나로 끝.","달리는 장면, 나도 같이 뛰고 싶어짐.",0,#6B4026
+03,1990s,Léon,레옹,1994,화분,sketches/03_leon.webp,19,2019-07-13,뿌리 없는 친구,4,"우유 마시는 킬러, 화분 챙기는 킬러.",마지막에 화분 심는 장면이 다 했음.,0,#4F8A4B
+04,1990s,Titanic,타이타닉,1997,사파이어 하트 목걸이,sketches/04_titanic.webp,46,2023-02-11,대양의 심장,4.5,"문짝, 둘이 같이 탈 수 있었다고 봄.",그래도 마지막엔 또 울었음.,1,#22307E
+05,1990s,The Matrix,매트릭스,1999,빨간 약과 파란 약,sketches/05_the-matrix.webp,47,2023-03-04,빨강 or 파랑?,5,나라면 파란 약 먹고 그냥 잤을 듯.,총알 피하는 장면은 볼 때마다 신기.,1,#D3473B
+06,2000s,Gladiator,글래디에이터,2000,투구,sketches/06_gladiator.webp,5,2018-06-09,콜로세움 출근룩,4,"밀밭 쓰다듬는 손, 처음과 끝이 같음.",복수극인데 끝맛은 이상하게 평온.,0,#8C9198
+07,2000s,,공동경비구역 JSA,2000,초코파이,sketches/07_jsa.webp,22,2020-01-25,남북 공통 간식,5,초코파이 하나에 남북이 같이 웃던 밤.,마지막 사진 한 장에 숨이 멎음.,1,#4A2C1E
+08,2000s,The Lord of the Rings,반지의 제왕,2001,절대반지,sketches/08_lord-of-the-rings.webp,23,2020-02-01,My precious,4.5,반지 하나 버리러 가는 데 세 편.,샘 없었으면 프로도는 못 갔음.,0,#D2A52C
+09,2000s,,올드보이,2003,군만두,sketches/09_oldboy.webp,40,2022-10-15,15년째 같은 메뉴,4.5,"15년 군만두라니, 메뉴부터 공포.","장도리 복도 씬, 원테이크라 더 아픔.",0,#C98A3A
+10,2000s,,타짜,2006,화투,sketches/10_tazza.webp,41,2022-10-22,묻고 더블로 가!,4,"손은 눈보다 빠르다, 진짜 믿게 됨.",곽철용이 13년 뒤에 뜰 줄은.,0,#C8302B
+11,2010s,Inception,인셉션,2010,팽이,sketches/11_inception.webp,3,2018-02-24,아직 도는 중?,5,팽이 넘어갔는지 아직도 궁금.,"꿈속의 꿈속의 꿈, 두 번 보고 이해함.",1,#AEB3BA
+12,2010s,Interstellar,인터스텔라,2014,블랙홀,sketches/12_interstellar.webp,26,2018-08-11,가르강튀아,5,"물 행성 1시간이 지구 7년, 울컥.","책장 뒤에서 딸에게 보내는 신호, 최고.",1,#E07A2E
+13,2010s,,택시운전사,2017,초록 택시,sketches/13_a-taxi-driver.webp,27,2018-08-18,광주까지 10만 원,4,10만 원 벌러 갔다가 역사를 태움.,송강호는 웃기다가 꼭 울림.,0,#8DBE69
+14,2010s,Bohemian Rhapsody,보헤미안 랩소디,2018,흰 민소매·긴 마이크·징 팔찌,sketches/14_bohemian-rhapsody.webp,52,2019-01-12,라이브 에이드 착장,4.5,마지막 20분은 거의 콘서트.,싱어롱관에서 '에-오' 따라 외침.,0,#3A3A3A
+15,2010s,,기생충,2019,짜파구리(계란 프라이),sketches/15_parasite.webp,53,2019-06-01,계란은 내 취향,5,"짜파구리에 채끝 한우, 그게 계급.",계단 내려갈 때마다 숨이 막힘.,1,#5A3A26
+16,2020s,Top Gun: Maverick,탑건: 매버릭,2022,보잉 선글라스,sketches/16_top-gun-maverick.webp,7,2022-06-25,보잉 선글라스,4.5,36년 만의 속편이 1편을 넘음.,톰 크루즈 혼자 시간이 안 흐름.,1,#5E6B4E
+17,2020s,The First Slam Dunk,더 퍼스트 슬램덩크,2022,농구공,sketches/17_the-first-slam-dunk.webp,14,2023-01-14,왼손은 거들 뿐,4.5,"송태섭 시점이라니, 이 선택 좋았음.","소리 꺼지는 마지막 몇 초, 소름.",1,#E2703A
+18,2020s,Suzume,스즈메의 문단속,2022,홀로 선 문,sketches/18_suzume.webp,15,2023-03-11,다녀오겠습니다,4,"폐허에 혼자 선 문, 처음엔 무서움.",다리 셋 의자 소타가 은근 귀여움.,0,#33569A
+19,2020s,KPop Demon Hunters,케이팝 데몬 헌터스,2025,갓,sketches/19_kpop-demon-hunters.webp,30,2026-01-31,저승사자 갓,4,'Golden' 무한 반복 중.,악역 사자보이즈를 응원하게 됨.,0,#2A2A2A
+20,2020s,,왕과 사는 남자,2026,수저 놓인 밥상,sketches/20_wanggwa-saneun-namja.webp,31,2026-02-07,청령포 밥상,4,유해진이 웃기다 울리는 건 반칙.,흰쌀밥 한 그릇이 이렇게 무거울 줄.,0,#A8653C
+</script>
+
+<script>
+(function () {
+  'use strict';
+  var root = document.documentElement;
+  root.classList.add('js');
+  setTimeout(function () { root.classList.add('is-ready'); }, 2600); // 글씨체가 늦어도 2.6초 뒤엔 보여 준다
+
+  /* ═══════════════ 그림 주소 — 한곳에 모음 (첨부 목록 그대로) ═══════════════ */
+  var IMAGES = {
+    "shelf/shelf.webp": "https://raw.githubusercontent.com/simplensharp/ia-codyssey/main/mission6/shelf/shelf.webp",
+    "shelf/book_cover_1990s.webp": "https://raw.githubusercontent.com/simplensharp/ia-codyssey/main/mission6/shelf/book_cover_1990s.webp",
+    "shelf/book_cover_2000s.webp": "https://raw.githubusercontent.com/simplensharp/ia-codyssey/main/mission6/shelf/book_cover_2000s.webp",
+    "shelf/book_cover_2010s.webp": "https://raw.githubusercontent.com/simplensharp/ia-codyssey/main/mission6/shelf/book_cover_2010s.webp",
+    "shelf/book_cover_2020s.webp": "https://raw.githubusercontent.com/simplensharp/ia-codyssey/main/mission6/shelf/book_cover_2020s.webp",
+    "sketches/01_jurassic-park.webp": "https://raw.githubusercontent.com/simplensharp/ia-codyssey/main/mission6/sketches/01_jurassic-park.webp",
+    "sketches/02_forrest-gump.webp": "https://raw.githubusercontent.com/simplensharp/ia-codyssey/main/mission6/sketches/02_forrest-gump.webp",
+    "sketches/03_leon.webp": "https://raw.githubusercontent.com/simplensharp/ia-codyssey/main/mission6/sketches/03_leon.webp",
+    "sketches/04_titanic.webp": "https://raw.githubusercontent.com/simplensharp/ia-codyssey/main/mission6/sketches/04_titanic.webp",
+    "sketches/05_the-matrix.webp": "https://raw.githubusercontent.com/simplensharp/ia-codyssey/main/mission6/sketches/05_the-matrix.webp",
+    "sketches/06_gladiator.webp": "https://raw.githubusercontent.com/simplensharp/ia-codyssey/main/mission6/sketches/06_gladiator.webp",
+    "sketches/07_jsa.webp": "https://raw.githubusercontent.com/simplensharp/ia-codyssey/main/mission6/sketches/07_jsa.webp",
+    "sketches/08_lord-of-the-rings.webp": "https://raw.githubusercontent.com/simplensharp/ia-codyssey/main/mission6/sketches/08_lord-of-the-rings.webp",
+    "sketches/09_oldboy.webp": "https://raw.githubusercontent.com/simplensharp/ia-codyssey/main/mission6/sketches/09_oldboy.webp",
+    "sketches/10_tazza.webp": "https://raw.githubusercontent.com/simplensharp/ia-codyssey/main/mission6/sketches/10_tazza.webp",
+    "sketches/11_inception.webp": "https://raw.githubusercontent.com/simplensharp/ia-codyssey/main/mission6/sketches/11_inception.webp",
+    "sketches/12_interstellar.webp": "https://raw.githubusercontent.com/simplensharp/ia-codyssey/main/mission6/sketches/12_interstellar.webp",
+    "sketches/13_a-taxi-driver.webp": "https://raw.githubusercontent.com/simplensharp/ia-codyssey/main/mission6/sketches/13_a-taxi-driver.webp",
+    "sketches/14_bohemian-rhapsody.webp": "https://raw.githubusercontent.com/simplensharp/ia-codyssey/main/mission6/sketches/14_bohemian-rhapsody.webp",
+    "sketches/15_parasite.webp": "https://raw.githubusercontent.com/simplensharp/ia-codyssey/main/mission6/sketches/15_parasite.webp",
+    "sketches/16_top-gun-maverick.webp": "https://raw.githubusercontent.com/simplensharp/ia-codyssey/main/mission6/sketches/16_top-gun-maverick.webp",
+    "sketches/17_the-first-slam-dunk.webp": "https://raw.githubusercontent.com/simplensharp/ia-codyssey/main/mission6/sketches/17_the-first-slam-dunk.webp",
+    "sketches/18_suzume.webp": "https://raw.githubusercontent.com/simplensharp/ia-codyssey/main/mission6/sketches/18_suzume.webp",
+    "sketches/19_kpop-demon-hunters.webp": "https://raw.githubusercontent.com/simplensharp/ia-codyssey/main/mission6/sketches/19_kpop-demon-hunters.webp",
+    "sketches/20_wanggwa-saneun-namja.webp": "https://raw.githubusercontent.com/simplensharp/ia-codyssey/main/mission6/sketches/20_wanggwa-saneun-namja.webp"
+  };
+
+  /* ═══════════════ 노트 4권 ═══════════════ */
+  var VOLUMES = [
+    { decade: '1990s', vol: 1, color: '#24324A', cover: 'shelf/book_cover_1990s.webp' },
+    { decade: '2000s', vol: 2, color: '#4C1E29', cover: 'shelf/book_cover_2000s.webp' },
+    { decade: '2010s', vol: 3, color: '#29402F', cover: 'shelf/book_cover_2010s.webp' },
+    { decade: '2020s', vol: 4, color: '#9C7027', cover: 'shelf/book_cover_2020s.webp' }
+  ];
+
+  /* 선반·표지 그림 치수 (기획서 수치, 선반 그림 980px 기준) */
+  var SHELF_TOP = 0.606 * 284;            // 선반 윗면
+  var COVER_RATIO = 491 / 320;            // 표지 그림 세로/가로
+  var BODY_BOTTOM = 0.895;                // 표지 그림에서 책 몸통 아래 끝
+  var BOOK_W = 142;                       // 책 한 권 너비
+  var BOOK_H = BOOK_W * COVER_RATIO;
+  var BOOK_TOP = SHELF_TOP - BOOK_H * BODY_BOTTOM;
+  var PIVOT_X = 0.97;                     // 2020s가 기대는 축(오른쪽 아래 모서리)
+  var LEAN = 4;                           // 2020s 기울기
+  var FIRST_X = 228;                      // 22.2% 지점 바로 옆
+  var LAST_PIVOT = 844;                   // 4도 기울면 색연필 컵(86.9%) 윗단에 닿는 자리
+  var LAST_X = LAST_PIVOT - BOOK_W * PIVOT_X;
+  var TAB_X = [0.17, 0.33, 0.5, 0.67, 0.83];   // 쪽 번호별 탭 가로 위치
+  var TAB_H = [19, 23, 20, 24, 21];
+  var TAB_TILT = [-3, 2.5, -1.5, 3, -2];
+
+  /* ═══════════════ csv 읽기 ═══════════════ */
+  function parseCSV(text) {
+    var rows = [], row = [], field = '', q = false;
+    for (var i = 0; i < text.length; i++) {
+      var c = text[i];
+      if (q) {
+        if (c === '"') { if (text[i + 1] === '"') { field += '"'; i++; } else { q = false; } }
+        else field += c;
+      } else if (c === '"') q = true;
+      else if (c === ',') { row.push(field); field = ''; }
+      else if (c === '\n' || c === '\r') {
+        if (c === '\r' && text[i + 1] === '\n') i++;
+        row.push(field); rows.push(row); row = []; field = '';
+      } else field += c;
+    }
+    if (field !== '' || row.length) { row.push(field); rows.push(row); }
+    var head = rows.shift();
+    return rows.filter(function (r) { return r.length > 1; }).map(function (r) {
+      var o = {}; head.forEach(function (h, j) { o[h] = r[j] == null ? '' : r[j]; }); return o;
+    });
+  }
+
+  var movies = parseCSV(document.getElementById('movies-csv').textContent.replace(/^\uFEFF/, '').trim()).map(function (r) {
+    return {
+      no: r.no, decade: r.decade,
+      title: r.title_en || r.title_ko,          // 외국 영화는 영어, 한국 영화는 한글
+      lang: r.title_en ? 'en' : 'ko',
+      year: r.year, symbol: r.symbol, sketch: r.sketch_file,
+      watched: r.watched, label: r.label, stars: Number(r.stars),
+      memo: [r.memo_1, r.memo_2],
+      tabbed: r.tabbed === '1', tabColor: r.tab_color
+    };
+  }).sort(function (a, b) { return Number(a.no) - Number(b.no); });
+
+  VOLUMES.forEach(function (v) {
+    v.movies = movies.filter(function (m) { return m.decade === v.decade; });
+    v.movies.forEach(function (m, i) { m.page = i + 1; });   // 쪽 번호는 권마다 1~5
+  });
+
+  /* ═══════════════ 작은 도구 ═══════════════ */
+  function el(tag, attrs) {
+    var n = document.createElement(tag);
+    if (attrs) Object.keys(attrs).forEach(function (k) {
+      var v = attrs[k];
+      if (v == null || v === false) return;
+      if (k === 'class') n.className = v;
+      else if (k === 'text') n.textContent = v;
+      else if (k.indexOf('--') === 0) n.style.setProperty(k, v);
+      else n.setAttribute(k, v === true ? '' : v);
+    });
+    for (var i = 2; i < arguments.length; i++) append(n, arguments[i]);
+    return n;
+  }
+  function append(n, c) {
+    if (c == null || c === false) return;
+    if (Array.isArray(c)) c.forEach(function (x) { append(n, x); });
+    else n.append(c);
+  }
+  function svg(markup) { var t = document.createElement('template'); t.innerHTML = markup.trim(); return t.content.firstChild; }
+  function hasHangul(s) { return /[ㄱ-ㆎ가-힣]/.test(s); }
+  function fmtDate(s) { var p = s.split('-'); return p[0] + '. ' + Number(p[1]) + '. ' + Number(p[2]); }
+  function lenClass(t) { return t.length > 18 ? 'is-xlong' : t.length > 13 ? 'is-long' : ''; }
+  function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+  function frame() { return new Promise(function (r) { requestAnimationFrame(function () { r(); }); }); }
+  function finished(a) { return a.finished.catch(function () {}); }
+  function onBroken(img) { img.addEventListener('error', function () { img.classList.add('is-broken'); }); }
+
+  var mqMobile = window.matchMedia('(max-width: 767.98px)');
+  var mqReduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  function isMobile() { return mqMobile.matches; }
+  function reduced() { return mqReduce.matches; }
+
+  var STAR = 'M12.2 1.9 14.8 9 22.3 9.6 16.2 14.3 18.6 21.5 12.1 17.2 5.7 21.8 7.8 14.1 1.7 9.2 9.2 9.2Z';
+  var ULINE = '<svg class="uline" viewBox="0 0 200 12" preserveAspectRatio="none" aria-hidden="true">' +
+    '<path class="u1" d="M3 7.4C38 4.4 76 9.4 114 6.4S172 4.4 197 6.8"/><path class="u2" d="M16 10.6C64 9.2 118 11.4 168 9.8"/></svg>';
+  var ARROW = '<svg class="mv-arrow" viewBox="0 0 64 40" aria-hidden="true">' +
+    '<path d="M5 3.5C4.4 17.5 16 30.4 53 29.6"/><path d="M45.4 23.2 53.6 29.6 45.8 35.8"/></svg>';
+
+  /* ═══════════════ 책장 만들기 ═══════════════ */
+  var shelfScreen = document.getElementById('shelfScreen');
+  var noteScreen = document.getElementById('noteScreen');
+  var stage = document.getElementById('shelfStage');
+  var shelfImg = el('img', { class: 'shelf-img', alt: '', draggable: 'false', src: IMAGES['shelf/shelf.webp'] });
+  stage.append(shelfImg);
+  onBroken(shelfImg);
+  var slots = [];
+  var coverImgs = [];
+
+  VOLUMES.forEach(function (v, vi) {
+    var x = FIRST_X + (LAST_X - FIRST_X) * vi / (VOLUMES.length - 1);
+    var lean = vi === VOLUMES.length - 1 ? LEAN : 0;
+    var cover = el('img', { class: 'book-cover', alt: '', draggable: 'false', src: IMAGES[v.cover] });
+    onBroken(cover); coverImgs.push(cover);
+
+    var tabs = el('div', { class: 'tabs' }, v.movies.filter(function (m) { return m.tabbed; }).map(function (m) {
+      var i = m.page - 1;
+      return el('button', {
+        type: 'button', class: 'tab', 'data-vol': vi, 'data-page': m.page,
+        'aria-label': m.no + ' ' + m.title + ' — 이 쪽 바로 펼치기',
+        '--tx': TAB_X[i], '--th': TAB_H[i], '--tr': TAB_TILT[i] + 'deg', '--tc': m.tabColor
+      }, el('span', { class: 'tab-note', 'aria-hidden': 'true' },
+        el('span', { class: 'tn-no', text: m.no }),
+        el('span', { class: 'tn-title', lang: m.lang, text: m.title })));
+    }));
+
+    var slot = el('div', { class: 'book-slot', 'data-vol': vi, '--x': x.toFixed(2), '--top': BOOK_TOP.toFixed(2), '--bw': BOOK_W, '--bh': BOOK_H.toFixed(2) },
+      el('div', { class: 'book-floor' }),
+      el('div', { class: 'book', '--lean': lean + 'deg' },
+        el('div', { class: 'book-wall' }),
+        tabs,
+        el('button', { type: 'button', class: 'book-btn', 'data-vol': vi, 'aria-label': v.decade + ' 노트 펼치기 (Vol. ' + v.vol + ')' },
+          el('span', { class: 'book-backing' }), cover, el('span', { class: 'cover-label', text: v.decade })),
+        el('i', { class: 'pivot' })));
+    stage.append(slot);
+    stage.append(el('button', {
+      type: 'button', class: 'year-btn', 'data-vol': vi, tabindex: '-1', 'aria-hidden': 'true',
+      '--cx': (x + BOOK_W / 2).toFixed(2)
+    }, el('span', { text: v.decade })));
+    slots.push(slot);
+  });
+
+  /* 글씨체·책장 그림이 준비되면 부드럽게 보여 준다 */
+  function imgReady(img) {
+    return new Promise(function (r) { if (img.complete) r(); else { img.addEventListener('load', r); img.addEventListener('error', r); } });
+  }
+  Promise.race([
+    Promise.all([document.fonts ? document.fonts.ready : Promise.resolve(), imgReady(shelfImg)].concat(coverImgs.map(imgReady))),
+    wait(2200)
+  ]).then(function () { root.classList.add('is-ready'); });
+
+  /* 영화 그림 20장 미리 받아 두기 (넘길 때 빈칸이 보이지 않도록) */
+  var preloaded = [];
+  function preload() {
+    movies.forEach(function (m) { var im = new Image(); im.decoding = 'async'; im.src = IMAGES[m.sketch]; preloaded.push(im); });
+  }
+  if (document.readyState === 'complete') setTimeout(preload, 200);
+  else window.addEventListener('load', function () { setTimeout(preload, 200); });
+
+  /* ═══════════════ 노트 쪽 그리기 ═══════════════ */
+  function starsEl(score) {
+    var wrap = el('span', { class: 'stars', role: 'img', 'data-score': String(score), 'aria-label': '별점 ' + score + '점 (5점 만점)' });
+    for (var i = 0; i < 5; i++) {
+      var fill = Math.max(0, Math.min(1, score - i));
+      var s = el('span', { class: 'star ' + (fill >= 1 ? 'is-full' : fill > 0 ? 'is-half' : 'is-empty') },
+        svg('<svg class="s-empty" viewBox="0 0 24 24" aria-hidden="true"><path d="' + STAR + '"/></svg>'));
+      if (fill > 0) {
+        var f = el('span', { class: 's-fill' }, svg('<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + STAR + '"/></svg>'));
+        f.style.width = (fill * 100) + '%';
+        s.append(f);
+      }
+      wrap.append(s);
+    }
+    return wrap;
+  }
+
+  function moviePage(m) {
+    var side = m.page % 2 ? 'r' : 'l';    // 홀수 쪽은 오른쪽, 짝수 쪽은 왼쪽
+    var img = el('img', { src: IMAGES[m.sketch], alt: m.symbol, draggable: 'false', decoding: 'async' });
+    onBroken(img);
+    var y = m.watched.split('-');
+    return el('article', {
+      class: 'page is-dotted side-' + side, 'data-page': m.page, 'data-no': m.no,
+      '--acc': m.tabColor, '--tilt': (side === 'r' ? -1.3 : 1.1) + 'deg', 'aria-label': m.page + '쪽 · ' + m.title
+    },
+      el('div', { class: 'pg' },
+        el('header', { class: 'mv-head' },
+          el('h2', { class: 'mv-title ' + lenClass(m.title), lang: m.lang },
+            el('span', { class: 'mv-title-text', text: m.title }), svg(ULINE)),
+          el('span', { class: 'mv-year', text: m.year })),
+        el('figure', { class: 'mv-sketch' }, img),
+        el('div', { class: 'mv-note' },
+          svg(ARROW),
+          el('p', { class: 'mv-label', lang: hasHangul(m.label) ? 'ko' : 'en', text: m.label })),
+        el('div', { class: 'postit' },
+          el('div', { class: 'pi-row' },
+            starsEl(m.stars),
+            el('span', { class: 'pi-date', 'aria-label': '본 날 ' + y[0] + '년 ' + Number(y[1]) + '월 ' + Number(y[2]) + '일', text: fmtDate(m.watched) })),
+          el('p', { class: 'pi-memo', text: m.memo[0] }),
+          el('p', { class: 'pi-memo', text: m.memo[1] }))),
+      el('span', { class: 'folio', 'aria-hidden': 'true', text: String(m.page) }));
+  }
+
+  function tocPage(v) {
+    var anyTab = v.movies.some(function (m) { return m.tabbed; });
+    return el('section', { class: 'page toc is-inside side-l', 'data-page': '0', 'aria-label': v.decade + ' · Vol. ' + v.vol + ' 차례' },
+      el('div', { class: 'pg' },
+        el('h2', { class: 'toc-plate' },
+          el('span', { class: 'd', text: v.decade }), el('span', { class: 'v', text: ' · Vol. ' + v.vol })),
+        el('p', { class: 'toc-cap', text: '차례' }),
+        el('ol', { class: 'toc-list' }, v.movies.map(function (m) {
+          return el('li', null, el('button', {
+            type: 'button', class: 'toc-item', 'data-goto': m.page,
+            'aria-label': m.page + '쪽 ' + m.title + ' ' + m.year + (m.tabbed ? ' · 다시 보고 싶은 페이지' : '') + ' 펼치기'
+          },
+            el('span', { class: 'toc-no', text: String(m.page) }),
+            el('span', { class: 'toc-title ' + lenClass(m.title), lang: m.lang, text: m.title }),
+            el('span', { class: 'toc-dots', 'aria-hidden': 'true' }),
+            el('span', { class: 'toc-year', text: m.year }),
+            el('span', { class: 'toc-flag' + (m.tabbed ? '' : ' is-empty'), '--tc': m.tabColor, 'aria-hidden': 'true' })));
+        })),
+        anyTab ? el('p', { class: 'toc-legend' }, el('span', { class: 'toc-flag', 'aria-hidden': 'true' }), '다시 보고 싶은 페이지') : null));
+  }
+
+  // m: 0 = 표지 안쪽(차례), 1~5 = 영화 쪽
+  function renderPage(vi, m) { return m === 0 ? tocPage(VOLUMES[vi]) : moviePage(VOLUMES[vi].movies[m - 1]); }
+
+  /* ═══════════════ 상태 ═══════════════ */
+  var notebook = document.getElementById('notebook');
+  var nbPages = document.getElementById('nbPages');
+  var prevBtn = document.getElementById('prevBtn');
+  var nextBtn = document.getElementById('nextBtn');
+  var pageNo = document.getElementById('pageNo');
+  var flyLayer = document.getElementById('flyLayer');
+  var LAST = 5;           // 마지막 쪽
+  var LAST_SPREAD = 2;    // 펼침면 0·1·2
+
+  var state = { screen: 'shelf', vol: 0, m: 0, mode: isMobile() ? 'mobile' : 'desk' };
+  var busy = false, flipping = false, pending = null, needSync = false, needRebuild = false;
+  var spread = null, slotL = null, slotR = null, track = null, mview = null;
+
+  function spreadOf(m) { return Math.floor(m / 2); }
+
+  function setScreen(name) {
+    state.screen = name;
+    shelfScreen.classList.toggle('is-active', name === 'shelf');
+    noteScreen.classList.toggle('is-active', name === 'note');
+  }
+
+  /* 노트 한 권 채우기 (컴퓨터: 두 쪽 / 폰: 한 쪽씩) */
+  function buildNotebook() {
+    var v = VOLUMES[state.vol];
+    state.mode = isMobile() ? 'mobile' : 'desk';
+    notebook.style.setProperty('--cover', v.color);
+    notebook.setAttribute('aria-label', v.decade + ' 노트 · Vol. ' + v.vol);
+    nbPages.textContent = '';
+    spread = slotL = slotR = track = mview = null;
+    if (state.mode === 'desk') {
+      slotL = el('div', { class: 'pslot pslot-l' });
+      slotR = el('div', { class: 'pslot pslot-r' });
+      spread = el('div', { class: 'spread' }, slotL, slotR);
+      nbPages.append(el('div', { class: 'nb-block nb-block-l' }), el('div', { class: 'nb-block nb-block-r' }), spread);
+      var s = spreadOf(state.m);
+      slotL.append(renderPage(state.vol, 2 * s));
+      slotR.append(renderPage(state.vol, 2 * s + 1));
+    } else {
+      track = el('div', { class: 'mtrack' });
+      for (var m = 0; m <= LAST; m++) track.append(renderPage(state.vol, m));
+      mview = el('div', { class: 'mview' }, track);
+      nbPages.append(el('div', { class: 'nb-block nb-block-l' }), el('div', { class: 'nb-block nb-block-r' }), mview);
+      bindSwipe(mview);
+      slideTo(state.m, true);
+    }
+    updatePager();
+  }
+
+  function updatePager() {
+    var atStart, atEnd;
+    if (state.mode === 'desk') {
+      var s = spreadOf(state.m);
+      pageNo.textContent = s === 0 ? 'p. 1' : 'p. ' + (2 * s) + '–' + (2 * s + 1);
+      atStart = s === 0; atEnd = s === LAST_SPREAD;
+    } else {
+      if (state.m === 0) { pageNo.textContent = ''; pageNo.append(el('span', { class: 'ko', text: '차례' })); }
+      else pageNo.textContent = 'p. ' + state.m;
+      atStart = state.m === 0; atEnd = state.m === LAST;
+    }
+    var focused = document.activeElement;
+    prevBtn.disabled = atStart;
+    nextBtn.disabled = atEnd;
+    if (focused === prevBtn && atStart && !atEnd) nextBtn.focus();
+    if (focused === nextBtn && atEnd && !atStart) prevBtn.focus();
+  }
+
+  /* ═══════════════ 쪽 넘기기 ═══════════════ */
+  function step(dir) {
+    if (state.screen !== 'note' || busy) return;
+    if (state.mode === 'desk') {
+      var s = spreadOf(state.m) + dir;
+      if (s < 0 || s > LAST_SPREAD) return;
+      goSpread(s, 2 * s);
+    } else {
+      var m = state.m + dir;
+      if (m < 0 || m > LAST) return;
+      slideTo(m);
+    }
+  }
+
+  function gotoPage(p) {  // 차례·탭에서 바로 가기
+    if (state.screen !== 'note' || busy) return;
+    if (state.mode === 'desk') goSpread(spreadOf(p), p);
+    else slideTo(p);
+  }
+
+  function goSpread(s, m) {
+    if (flipping) { pending = { s: s, m: m }; return; }
+    var from = spreadOf(state.m);
+    if (s === from) { state.m = m; updatePager(); return; }
+    state.m = m;
+    updatePager();
+    flipSpread(from, s).then(function () {
+      if (pending) { var p = pending; pending = null; goSpread(p.s, p.m); }
+    });
+  }
+
+  function setSlot(slot, page) { slot.textContent = ''; slot.append(page); }
+
+  function decodeAll(node) {
+    var imgs = Array.prototype.slice.call(node.querySelectorAll('img'));
+    return Promise.race([
+      Promise.all(imgs.map(function (i) { return i.decode ? i.decode().catch(function () {}) : null; })),
+      wait(500)
+    ]);
+  }
+
+  /* 종이 한 장을 여섯 띠로 나눠, 바깥쪽이 먼저 들리며 휘어 넘어가게 한다 */
+  var SEGS = 6;
+  var BEND = [0, 4.5, 6, 7.5, 8.5, 9.5];
+  function buildLeaf(frontPage, backPage) {
+    var leaf = el('div', { class: 'leaf', 'aria-hidden': 'true', inert: true, '--n': SEGS });
+    var parent = leaf, L = { leaf: leaf, segs: [], fa: [], fb: [], ba: [], bb: [] };
+    for (var k = 0; k < SEGS; k++) {
+      var fp = frontPage.cloneNode(true), bp = backPage.cloneNode(true);
+      fp.style.left = 'calc(var(--pw) / ' + SEGS + ' * ' + (-k) + ')';
+      bp.style.left = 'calc(var(--pw) / ' + SEGS + ' * ' + (-(SEGS - 1 - k)) + ')';
+      var s1 = el('div', { class: 'shade shade-a' }), s2 = el('div', { class: 'shade shade-b' });
+      var s3 = el('div', { class: 'shade shade-a' }), s4 = el('div', { class: 'shade shade-b' });
+      var seg = el('div', { class: 'seg' },
+        el('div', { class: 'face face-front' }, fp, s1, s2),
+        el('div', { class: 'face face-back' }, bp, s3, s4));
+      parent.append(seg); parent = seg;
+      L.segs.push(seg); L.fa.push(s1); L.fb.push(s2); L.ba.push(s3); L.bb.push(s4);
+    }
+    return L;
+  }
+
+  function smooth(t) { return t * t * (3 - 2 * t); }
+  function shadeOf(deg) { return Math.max(0, 0.28 * Math.sin(-deg * Math.PI / 180)); }
+
+  function leafFrames(dir) {
+    var N = 32, out = { seg: [], fa: [], fb: [], ba: [], bb: [], shR: [], shL: [] };
+    for (var k = 0; k < SEGS; k++) { out.seg.push([]); out.fa.push([]); out.fb.push([]); out.ba.push([]); out.bb.push([]); }
+    for (var i = 0; i < N; i++) {
+      var t = i / (N - 1), off = t;
+      var e = smooth(t);
+      var base = dir > 0 ? -180 * e : -180 * (1 - e);
+      var wave = Math.sin(2 * Math.PI * t) * (1 - 0.45 * t);   // 처음엔 바깥쪽이 앞서고, 나중엔 뒤따른다
+      var prev = 0, abs = base, th = [];
+      for (var k2 = 0; k2 < SEGS; k2++) {
+        if (k2 > 0) abs = abs + (dir > 0 ? -1 : 1) * BEND[k2] * wave;
+        abs = Math.max(-180, Math.min(0, abs));
+        var rel = k2 === 0 ? abs : abs - prev;
+        prev = abs; th.push(abs);
+        out.seg[k2].push({ transform: 'rotateY(' + rel.toFixed(3) + 'deg)', offset: off });
+      }
+      // 띠 경계마다 기울기를 구해, 그늘이 띠를 넘어 끊김 없이 이어지게 한다
+      var bd = [th[0]];
+      for (var k3 = 1; k3 < SEGS; k3++) bd.push((th[k3 - 1] + th[k3]) / 2);
+      bd.push(th[SEGS - 1]);
+      for (var k4 = 0; k4 < SEGS; k4++) {
+        var l = shadeOf(bd[k4]).toFixed(3), r = shadeOf(bd[k4 + 1]).toFixed(3);
+        out.fa[k4].push({ opacity: l, offset: off }); out.fb[k4].push({ opacity: r, offset: off });
+        out.ba[k4].push({ opacity: r, offset: off }); out.bb[k4].push({ opacity: l, offset: off });
+      }
+      var lift = dir > 0 ? e : 1 - e;  // 0 = 오른쪽에 누움, 1 = 왼쪽에 누움
+      out.shR.push({ opacity: (Math.max(0, 1 - lift * 1.8) * 0.9).toFixed(3), offset: off });
+      out.shL.push({ opacity: (Math.max(0, (lift - 0.45) / 0.55) * (1 - lift) * 3.2).toFixed(3), offset: off });
+    }
+    return out;
+  }
+
+  function flipSpread(from, to) {
+    flipping = true;
+    var vi = state.vol;
+    var fwd = to > from, lo = Math.min(from, to), hi = Math.max(from, to);
+
+    if (reduced()) {
+      setSlot(slotL, renderPage(vi, 2 * to)); setSlot(slotR, renderPage(vi, 2 * to + 1));
+      flipping = false;
+      return Promise.resolve();
+    }
+
+    // 넘어가는 종이: 앞면 = 낮은 펼침면의 오른쪽, 뒷면 = 높은 펼침면의 왼쪽
+    var L = buildLeaf(renderPage(vi, 2 * lo + 1), renderPage(vi, 2 * hi));
+    if (!fwd) L.segs[0].style.transform = 'rotateY(-180deg)';
+    var shR = el('div', { class: 'fshadow fshadow-r' });
+    var shL = el('div', { class: 'fshadow fshadow-l' });
+    // 종이 밑에서 드러날 쪽(under)과, 다 넘긴 뒤 반대편에 놓일 쪽(after)
+    var under = fwd ? renderPage(vi, 2 * to + 1) : renderPage(vi, 2 * to);
+    var after = fwd ? renderPage(vi, 2 * to) : renderPage(vi, 2 * to + 1);
+    var ready = Promise.all([decodeAll(L.leaf), decodeAll(under), decodeAll(after)]);
+    spread.append(L.leaf);
+
+    return ready.then(function () {
+      // 넘어가는 종이가 덮고 있는 동안 아래 쪽을 바꿔 둔다
+      setSlot(fwd ? slotR : slotL, under);
+      spread.append(shR, shL);
+      var fr = leafFrames(fwd ? 1 : -1);
+      var opt = { duration: 860, easing: 'linear', fill: 'forwards' };
+      var anims = [];
+      L.segs.forEach(function (sg, k) {
+        anims.push(sg.animate(fr.seg[k], opt));
+        anims.push(L.fa[k].animate(fr.fa[k], opt), L.fb[k].animate(fr.fb[k], opt));
+        anims.push(L.ba[k].animate(fr.ba[k], opt), L.bb[k].animate(fr.bb[k], opt));
+      });
+      anims.push(shR.animate(fr.shR, opt), shL.animate(fr.shL, opt));
+      return finished(anims[0]).then(function () { return Promise.all(anims.map(finished)); });
+    }).then(function () {
+      setSlot(fwd ? slotL : slotR, after);
+      L.leaf.remove(); shR.remove(); shL.remove();
+      flipping = false;
+    });
+  }
+
+  /* 폰: 한 쪽씩 옆으로 미끄러지기 */
+  function slideTo(m, instant) {
+    state.m = m;
+    if (!track) return;
+    track.style.transition = instant ? 'none' : '';
+    track.style.transform = 'translate3d(' + (-100 * m) + '%,0,0)';
+    Array.prototype.forEach.call(track.children, function (p, i) {
+      if (i === m) { p.removeAttribute('inert'); p.removeAttribute('aria-hidden'); }
+      else { p.setAttribute('inert', ''); p.setAttribute('aria-hidden', 'true'); }
+    });
+    if (instant) { void track.offsetWidth; track.style.transition = ''; }
+    updatePager();
+  }
+
+  var suppressClick = false;
+  function bindSwipe(view) {
+    var d = null;
+    view.addEventListener('pointerdown', function (e) {
+      if (!e.isPrimary || e.button > 0 || busy) return;
+      d = { id: e.pointerId, x0: e.clientX, y0: e.clientY, t0: performance.now(), dx: 0, on: false };
+    });
+    view.addEventListener('pointermove', function (e) {
+      if (!d || e.pointerId !== d.id) return;
+      var dx = e.clientX - d.x0, dy = e.clientY - d.y0;
+      if (!d.on) {
+        if (Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy) * 1.15) {
+          d.on = true;
+          try { view.setPointerCapture(e.pointerId); } catch (err) { /* 무시 */ }
+          track.style.transition = 'none';
+        } else if (Math.abs(dy) > 12) { d = null; return; }
+      }
+      if (d.on) {
+        var edge = (state.m === 0 && dx > 0) || (state.m === LAST && dx < 0);
+        var shown = edge ? dx * 0.3 : dx;
+        track.style.transform = 'translate3d(calc(' + (-100 * state.m) + '% + ' + shown.toFixed(1) + 'px),0,0)';
+        d.dx = dx;
+        if (e.cancelable) e.preventDefault();
+      }
+    });
+    function end(e) {
+      if (!d || (e && e.pointerId !== d.id)) return;
+      if (d.on) {
+        var w = view.clientWidth || 1;
+        var v = d.dx / Math.max(1, performance.now() - d.t0);
+        var m = state.m;
+        if ((d.dx < -w * 0.16 || v < -0.45) && m < LAST) m++;
+        else if ((d.dx > w * 0.16 || v > 0.45) && m > 0) m--;
+        track.style.transition = '';
+        slideTo(m);
+        suppressClick = true;
+        setTimeout(function () { suppressClick = false; }, 60);
+      }
+      d = null;
+    }
+    view.addEventListener('pointerup', end);
+    view.addEventListener('pointercancel', function (e) {
+      if (d && d.on) { track.style.transition = ''; slideTo(state.m); }
+      d = null;
+    });
+  }
+
+  /* ═══════════════ 노트 펼치기 · 덮기 ═══════════════ */
+  function bodyRectOf(vi) {
+    // 선반 위 책 몸통의 지금 자리 (손을 올려 떠 있으면 그 높이 그대로)
+    var slot = slots[vi];
+    var sr = slot.getBoundingClientRect();
+    var pv = slot.querySelector('.pivot').getBoundingClientRect();
+    var w = sr.width, h = sr.height;
+    return { x: pv.left - PIVOT_X * w, y: pv.top - BODY_BOTTOM * h, w: w, h: BODY_BOTTOM * h, lean: vi === VOLUMES.length - 1 ? LEAN : 0 };
+  }
+
+  function targetRect() {
+    var r = notebook.getBoundingClientRect();
+    if (state.mode === 'desk') return { x: r.left + r.width / 2, y: r.top, w: r.width / 2, h: r.height };
+    return { x: r.left, y: r.top, w: r.width, h: r.height };
+  }
+
+  function makeFly(vi, t, withBack) {
+    var v = VOLUMES[vi];
+    var url = 'url("' + IMAGES[v.cover] + '")';
+    var fly = el('div', { class: 'fly' });
+    fly.style.left = t.x + 'px'; fly.style.top = t.y + 'px';
+    fly.style.width = t.w + 'px'; fly.style.height = t.h + 'px';
+    var art = el('div', { class: 'fly-art' }); art.style.backgroundImage = url;
+    var label = el('div', { class: 'fly-label', text: v.decade }); label.style.fontSize = (t.w * 24 / BOOK_W) + 'px';
+    var frontShade = el('div', { class: 'shade' });
+    var front = el('div', { class: 'fly-face fly-front' }, el('div', { class: 'fly-backing' }), art, label, frontShade);
+    var cover = el('div', { class: 'fly-cover' }, front);
+    var backShade = null;
+    if (withBack) {
+      var clone = notebook.cloneNode(true);
+      clone.removeAttribute('id'); clone.removeAttribute('tabindex'); clone.removeAttribute('role'); clone.removeAttribute('aria-label');
+      clone.classList.remove('is-half', 'is-concealed');
+      Array.prototype.forEach.call(clone.querySelectorAll('[id]'), function (n) { n.removeAttribute('id'); });
+      var rb = clone.querySelector('.nb-ribbon'); if (rb) rb.remove();
+      backShade = el('div', { class: 'shade' });
+      cover.append(el('div', { class: 'fly-face fly-back' }, clone, backShade));
+    }
+    var rib = el('div', null); rib.style.backgroundImage = url;
+    var ribbon = el('div', { class: 'fly-ribbon' }, rib);
+    var shadow = el('div', { class: 'fly-shadow' });
+    fly.append(shadow, ribbon, cover);
+    flyLayer.append(fly);
+    return { fly: fly, cover: cover, frontShade: frontShade, backShade: backShade, ribbon: ribbon, shadow: shadow };
+  }
+
+  function flyTransform(src, t, dx, dy, rot, sc) {
+    // 펼친 크기로 만든 책을 선반 위 책 크기·자리·기울기로 되돌리는 변환
+    var sx = src.w / t.w * sc, sy = src.h / t.h * sc;
+    var px = PIVOT_X * src.w, py = src.h;
+    return 'translate(' + (src.x - t.x + dx).toFixed(2) + 'px,' + (src.y - t.y + dy).toFixed(2) + 'px) ' +
+      'translate(' + px.toFixed(2) + 'px,' + py.toFixed(2) + 'px) rotate(' + rot + 'deg) translate(' + (-px).toFixed(2) + 'px,' + (-py).toFixed(2) + 'px) ' +
+      'scale(' + sx.toFixed(5) + ',' + sy.toFixed(5) + ')';
+  }
+  function idTransform(src) {
+    var px = PIVOT_X * src.w, py = src.h;
+    return 'translate(0px,0px) translate(' + px.toFixed(2) + 'px,' + py.toFixed(2) + 'px) rotate(0deg) translate(' + (-px).toFixed(2) + 'px,' + (-py).toFixed(2) + 'px) scale(1,1)';
+  }
+
+  function openNotebook(vi, m, push) {
+    if (busy || state.screen === 'note') return;
+    busy = true;
+    state.vol = vi; state.m = m || 0;
+    if (push !== false) { try { history.pushState({ mn: 'note', vol: vi, m: state.m }, ''); } catch (e) { /* file:// 등에서 막히면 무시 */ } }
+    buildNotebook();
+    var run = reduced() ? Promise.resolve(setScreen('note')) : playOpen(vi);
+    run.then(function () {
+      busy = false;
+      notebook.focus({ preventScroll: true });
+      afterBusy();
+    });
+  }
+
+  function playOpen(vi) {
+    var slot = slots[vi];
+    var src = bodyRectOf(vi);
+    notebook.classList.add('is-concealed');
+    setScreen('note');
+    return frame().then(function () {
+      return decodeAll(notebook);
+    }).then(function () {
+      var t = targetRect();
+      var f = makeFly(vi, t, state.mode === 'desk');
+      slot.classList.add('is-out');
+      var k0 = flyTransform(src, t, 0, 0, src.lean, 1);
+      var k1 = flyTransform(src, t, -src.w * 0.02, -src.h * 0.07, src.lean * 0.3, 1.06);
+      var k2 = idTransform(src);
+      var a = f.fly.animate([
+        { transform: k0, offset: 0, easing: 'cubic-bezier(.25,.75,.35,1)' },
+        { transform: k1, offset: 0.28, easing: 'cubic-bezier(.55,.02,.22,1)' },
+        { transform: k2, offset: 1 }
+      ], { duration: 820, fill: 'forwards' });
+      f.shadow.animate([{ opacity: .3 }, { opacity: .55, offset: .4 }, { opacity: .25 }], { duration: 820, fill: 'forwards' });
+      return finished(a).then(function () {
+        notebook.classList.remove('is-concealed');
+        if (state.mode === 'desk') notebook.classList.add('is-half');
+        var dur = state.mode === 'desk' ? 900 : 620;
+        var end = state.mode === 'desk' ? -180 : -112;
+        var opts = { duration: dur, easing: 'cubic-bezier(.45,.04,.24,1)', fill: 'forwards' };
+        var rot = f.cover.animate([{ transform: 'rotateY(0deg)' }, { transform: 'rotateY(' + end + 'deg)' }], opts);
+        f.ribbon.animate([{ opacity: 1 }, { opacity: 0 }], { duration: dur * 0.5, fill: 'forwards' });
+        f.shadow.animate([{ opacity: .25 }, { opacity: 0 }], { duration: dur * 0.6, fill: 'forwards' });
+        if (state.mode === 'desk') {
+          f.frontShade.animate([{ opacity: 0 }, { opacity: .32, offset: .5 }, { opacity: .32 }], opts);
+          f.backShade.animate([{ opacity: .3 }, { opacity: .3, offset: .5 }, { opacity: 0 }], opts);
+        } else {
+          f.cover.animate([{ opacity: 1 }, { opacity: 1, offset: .35 }, { opacity: 0 }], opts);
+        }
+        return finished(rot);
+      }).then(function () {
+        notebook.classList.remove('is-half');
+        f.fly.remove();
+        slot.classList.remove('is-out');
+      });
+    });
+  }
+
+  var wantClose = false;
+  function requestClose() {
+    if (state.screen !== 'note') return;
+    if (busy) { wantClose = true; return; }   // 펼치는 중이면 다 펼친 뒤 닫는다
+    var hs = history.state;
+    if (hs && hs.mn === 'note') history.back();   // 뒤로 가기와 같은 길로 닫는다
+    else closeNotebook();
+  }
+
+  function closeNotebook() {
+    if (busy || state.screen !== 'note') return;
+    busy = true;
+    pending = null;
+    var vi = state.vol;
+    var run = reduced() ? Promise.resolve(setScreen('shelf')) : playClose(vi);
+    run.then(function () {
+      busy = false;
+      var btn = slots[vi].querySelector('.book-btn');
+      btn.focus({ preventScroll: true });
+      afterBusy();
+    });
+  }
+
+  function playClose(vi) {
+    var slot = slots[vi];
+    var t = targetRect();
+    var desk = state.mode === 'desk';
+    var f = makeFly(vi, t, desk);
+    var dur = desk ? 760 : 480;
+    var start = desk ? -180 : -112;
+    f.cover.style.transform = 'rotateY(' + start + 'deg)';
+    f.ribbon.style.opacity = '0';
+    f.shadow.style.opacity = '0';
+    if (desk) notebook.classList.add('is-half');
+    else f.cover.style.opacity = '0';
+    var opts = { duration: dur, easing: 'cubic-bezier(.5,0,.3,1)', fill: 'forwards' };
+    var rot = f.cover.animate([{ transform: 'rotateY(' + start + 'deg)' }, { transform: 'rotateY(0deg)' }], opts);
+    if (desk) {
+      f.frontShade.animate([{ opacity: .32 }, { opacity: .32, offset: .5 }, { opacity: 0 }], opts);
+      f.backShade.animate([{ opacity: 0 }, { opacity: .3, offset: .5 }, { opacity: .3 }], opts);
+    } else {
+      f.cover.animate([{ opacity: 0 }, { opacity: 1, offset: .6 }, { opacity: 1 }], opts);
+    }
+    return finished(rot).then(function () {
+      notebook.classList.add('is-concealed');
+      notebook.classList.remove('is-half');
+      slot.classList.add('is-out');
+      setScreen('shelf');
+      return frame();
+    }).then(function () {
+      var src = bodyRectOf(vi);
+      var k0 = flyTransform(src, t, 0, 0, src.lean, 1);
+      var k1 = flyTransform(src, t, -src.w * 0.02, -src.h * 0.07, src.lean * 0.3, 1.06);
+      var k2 = idTransform(src);
+      f.ribbon.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300, delay: 260, fill: 'forwards' });
+      var a = f.fly.animate([
+        { transform: k2, offset: 0, easing: 'cubic-bezier(.6,.0,.4,1)' },
+        { transform: k1, offset: 0.74, easing: 'cubic-bezier(.4,0,.6,1)' },
+        { transform: k0, offset: 1 }
+      ], { duration: 760, fill: 'forwards' });
+      f.shadow.animate([{ opacity: 0 }, { opacity: .45, offset: .5 }, { opacity: .3 }], { duration: 760, fill: 'forwards' });
+      return finished(a);
+    }).then(function () {
+      slot.classList.remove('is-out');
+      f.fly.remove();
+      notebook.classList.remove('is-concealed');
+    });
+  }
+
+  /* 뒤로 가기·앞으로 가기와 화면을 맞춘다 */
+  function syncFromHistory() {
+    if (busy) { needSync = true; return; }
+    var hs = history.state;
+    if (hs && hs.mn === 'note') {
+      if (state.screen !== 'note') openNotebook(hs.vol, 0, false);
+    } else if (state.screen === 'note') closeNotebook();
+  }
+  function afterBusy() {
+    if (needRebuild && state.screen === 'note') { needRebuild = false; buildNotebook(); }
+    if (wantClose) { wantClose = false; if (state.screen === 'note') { requestClose(); return; } }
+    if (needSync) { needSync = false; syncFromHistory(); }
+  }
+  window.addEventListener('popstate', syncFromHistory);
+  try { if (history.state && history.state.mn) history.replaceState(null, ''); } catch (e) { /* 무시 */ }
+
+  /* 폭이 768px을 넘나들면 같은 쪽을 다른 방식으로 다시 그린다 */
+  function onModeChange() {
+    if (state.screen !== 'note') return;
+    if (busy || flipping) { needRebuild = true; return; }
+    buildNotebook();
+  }
+  if (mqMobile.addEventListener) mqMobile.addEventListener('change', onModeChange);
+  else if (mqMobile.addListener) mqMobile.addListener(onModeChange);
+
+  /* ═══════════════ 누르기 ═══════════════ */
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest ? e.target.closest('button') : null;
+    if (!t) return;
+    if (t.classList.contains('tab')) { e.stopPropagation(); openNotebook(Number(t.dataset.vol), Number(t.dataset.page)); return; }
+    if (t.classList.contains('book-btn') || t.classList.contains('year-btn')) { openNotebook(Number(t.dataset.vol), 0); return; }
+    if (t.classList.contains('toc-item')) { if (!suppressClick) gotoPage(Number(t.dataset.goto)); return; }
+    if (t === prevBtn) { step(-1); return; }
+    if (t === nextBtn) { step(1); return; }
+    if (t.dataset.action === 'shelf') { requestClose(); }
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (state.screen !== 'note' || e.altKey || e.ctrlKey || e.metaKey) return;
+    if (e.key === 'ArrowRight') { e.preventDefault(); step(1); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1); }
+    else if (e.key === 'Escape') { e.preventDefault(); requestClose(); }
+  });
+})();
+</script>
+</body>
+</html>
